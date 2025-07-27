@@ -27,8 +27,14 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex flex-col justify-center items-center h-64">
+        <img 
+          src="https://customer-assets.emergentagent.com/job_apiforge-2/artifacts/r0co6pp1_1000006696-removebg-preview.png" 
+          alt="KeyForge Logo" 
+          className="h-16 w-16 mb-4 animate-pulse"
+        />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <p className="mt-2 text-sm text-gray-500">Loading dashboard...</p>
       </div>
     );
   }
