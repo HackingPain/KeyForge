@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 class KeyForgeAPITester:
-    def __init__(self, base_url="https://530a6f4f-114a-4972-b2c9-39f355dce381.preview.emergentagent.com"):
+    def __init__(self, base_url="https://6119ef65-d108-47ae-9082-3f721b54f551.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
