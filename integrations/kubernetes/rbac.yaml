@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: keyforge-operator
+  namespace: keyforge-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keyforge-operator
+rules:
+  # Manage Kubernetes Secrets across all namespaces
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Watch and update KeyForgeSecret custom resources
+  - apiGroups: ["keyforge.io"]
+    resources: ["keyforgesecrets"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["keyforge.io"]
+    resources: ["keyforgesecrets/status"]
+    verbs: ["get", "patch", "update"]
+  # Events for operator diagnostics
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: keyforge-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: keyforge-operator
+subjects:
+  - kind: ServiceAccount
+    name: keyforge-operator
+    namespace: keyforge-system

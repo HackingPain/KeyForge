@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keyforge-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keyforge-operator
+  namespace: keyforge-system
+  labels:
+    app: keyforge-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keyforge-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: keyforge-operator
+    spec:
+      serviceAccountName: keyforge-operator
+      containers:
+        - name: operator
+          image: keyforge/operator:latest
+          command: ["kopf", "run", "/app/operator.py", "--verbose"]
+          env:
+            - name: KEYFORGE_URL
+              value: "http://keyforge-api.keyforge-system.svc.cluster.local:8000"
+            - name: KEYFORGE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keyforge-operator-token
+                  key: token
+          ports:
+            - name: health
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+      terminationGracePeriodSeconds: 30

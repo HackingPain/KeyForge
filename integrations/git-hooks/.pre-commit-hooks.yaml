@@ -1,0 +1,8 @@
+- id: keyforge-scan
+  name: KeyForge Secret Scanner
+  description: Scan staged files for hardcoded secrets, API keys, and credentials.
+  entry: keyforge-scan scan
+  language: python
+  types: [text]
+  stages: [pre-commit]
+  require_serial: true

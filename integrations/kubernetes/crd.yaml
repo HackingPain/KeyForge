@@ -1,0 +1,84 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: keyforgesecrets.keyforge.io
+spec:
+  group: keyforge.io
+  names:
+    kind: KeyForgeSecret
+    listKind: KeyForgeSecretList
+    plural: keyforgesecrets
+    singular: keyforgesecret
+    shortNames:
+      - kfs
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - credentialIds
+                - secretName
+              properties:
+                credentialIds:
+                  description: List of KeyForge credential IDs to sync into this Secret.
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                secretName:
+                  description: Name of the Kubernetes Secret to create or update.
+                  type: string
+                namespace:
+                  description: >-
+                    Target namespace for the Secret. Defaults to the namespace
+                    of the KeyForgeSecret CR itself.
+                  type: string
+                refreshInterval:
+                  description: >-
+                    How often (in seconds) to re-sync credentials from KeyForge.
+                    Defaults to 60.
+                  type: integer
+                  default: 60
+                  minimum: 10
+                keyMapping:
+                  description: >-
+                    Optional mapping to rename credential keys in the resulting
+                    Secret. Keys are KeyForge credential IDs; values are the
+                    desired Secret data key names.
+                  type: object
+                  additionalProperties:
+                    type: string
+            status:
+              type: object
+              properties:
+                synced:
+                  description: Whether the Secret is currently in sync with KeyForge.
+                  type: boolean
+                lastSyncTime:
+                  description: ISO-8601 timestamp of the last successful sync.
+                  type: string
+                error:
+                  description: Human-readable error message from the last sync attempt.
+                  type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Secret
+          type: string
+          jsonPath: .spec.secretName
+        - name: Synced
+          type: boolean
+          jsonPath: .status.synced
+        - name: Last Sync
+          type: string
+          jsonPath: .status.lastSyncTime
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

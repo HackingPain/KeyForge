@@ -1,4 +1,4 @@
-"""KeyForge API — Universal API Infrastructure Assistant (v4.1)"""
+"""KeyForge API — Universal API Infrastructure Assistant (v5.0)"""
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
@@ -67,6 +67,15 @@ from backend.routes.lifecycle import router as lifecycle_router
 
 # Monitoring router
 from backend.routes.metrics import router as metrics_router
+
+# Phase 7 routers — Security Hardening
+from backend.routes.envelope_encryption import router as envelope_encryption_router
+from backend.routes.kms_admin import router as kms_admin_router
+from backend.routes.audit_integrity import router as audit_integrity_router
+from backend.routes.proxy import router as proxy_router
+from backend.routes.field_encryption import router as field_encryption_router
+from backend.routes.backup import router as backup_router
+from backend.routes.expiration_policy import router as expiration_policy_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -184,6 +193,27 @@ async def create_indexes():
         )
         await db.lifecycle_events.create_index([("user_id", 1), ("timestamp", -1)])
 
+        # Phase 7 — Envelope encryption
+        await db.user_data_keys.create_index("user_id")
+        await db.user_data_keys.create_index("key_id", unique=True)
+
+        # Proxy tokens
+        await db.proxy_tokens.create_index("user_id")
+        await db.proxy_tokens.create_index("token_id", unique=True)
+        await db.proxy_tokens.create_index("expires_at")
+
+        # Backups
+        await db.backups.create_index("backup_id", unique=True)
+        await db.backups.create_index("user_id")
+
+        # Expiration policies
+        await db.expiration_policies.create_index("user_id", unique=True)
+        await db.policy_exemptions.create_index([("credential_id", 1), ("user_id", 1)])
+        await db.rotation_requirements.create_index("credential_id")
+
+        # Audit integrity (chained entries)
+        await db.audit_chain.create_index([("user_id", 1), ("timestamp", 1)])
+
         logger.info("Database indexes created successfully")
     except Exception as e:
         logger.warning("Index creation warning: %s", e)
@@ -192,7 +222,7 @@ async def create_indexes():
 app = FastAPI(
     title="KeyForge API",
     description=API_DESCRIPTION,
-    version="4.1.0",
+    version="5.0.0",
     lifespan=lifespan,
     openapi_tags=TAGS_METADATA,
 )
@@ -240,6 +270,15 @@ app.include_router(lifecycle_router)
 # Monitoring
 app.include_router(metrics_router)
 
+# Phase 7 routers — Security Hardening
+app.include_router(envelope_encryption_router)
+app.include_router(kms_admin_router)
+app.include_router(audit_integrity_router)
+app.include_router(proxy_router)
+app.include_router(field_encryption_router)
+app.include_router(backup_router)
+app.include_router(expiration_policy_router)
+
 # Middleware stack (order matters — outermost first)
 # Monitoring wraps everything to capture timing
 app.add_middleware(MonitoringMiddleware)
@@ -263,7 +302,7 @@ app.add_middleware(
 
 @app.get("/api/")
 async def root():
-    return {"message": "KeyForge API Infrastructure Assistant", "version": "4.1.0"}
+    return {"message": "KeyForge API Infrastructure Assistant", "version": "5.0.0"}
 
 
 @app.get("/api/health")
