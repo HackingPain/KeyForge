@@ -12,7 +12,6 @@ const CredentialManager = ({ api }) => {
   useEffect(() => {
     fetchCredentials();
     fetchApiCatalog();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchApiCatalog = async () => {

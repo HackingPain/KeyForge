@@ -7,7 +7,6 @@ const Dashboard = ({ api }) => {
 
   useEffect(() => {
     fetchOverview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchOverview = async () => {
