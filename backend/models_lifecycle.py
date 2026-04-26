@@ -2,11 +2,36 @@
 
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
-# ── Expiration models ─────────────────────────────────────────────────────────
+
+class RotationStatus(str, Enum):
+    """Enumerates the outcome of a single auto-rotation execution.
+
+    Used in the response from POST /api/auto-rotation/{id}/trigger and as the
+    canonical action-suffix when writing audit-log entries for rotation events.
+    """
+
+    # Issuer was invoked and produced a fresh credential; the stored value was updated.
+    ROTATED = "rotated"
+    # Credential predates the issuer system (no issuer registered); manual rotation required.
+    SKIPPED_NO_ISSUER = "skipped_no_issuer"
+    # Issuer name on the credential is no longer registered with the app.
+    SKIPPED_ISSUER_NOT_REGISTERED = "skipped_issuer_not_registered"
+    # Issuer is registered but does not implement mint_scoped_credential.
+    SKIPPED_UNSUPPORTED = "skipped_unsupported"
+    # Upstream rejected the auth grant (revoked, expired, bad token); needs user attention.
+    FAILED_AUTH = "failed_auth"
+    # Upstream 5xx or network failure; the next scheduled rotation will retry automatically.
+    FAILED_UPSTREAM = "failed_upstream"
+    # Generic issuer or unexpected failure; the rotation worker stays alive.
+    FAILED = "failed"
+
+
+# -- Expiration models ---------------------------------------------------------
 
 
 class CredentialExpiration(BaseModel):
@@ -36,7 +61,7 @@ class CredentialExpirationResponse(BaseModel):
     alert_sent: bool = False
 
 
-# ── Permission models ─────────────────────────────────────────────────────────
+# -- Permission models ---------------------------------------------------------
 
 
 class CredentialPermission(BaseModel):
@@ -65,7 +90,7 @@ class CredentialPermissionResponse(BaseModel):
     created_at: datetime
 
 
-# ── Versioning models ─────────────────────────────────────────────────────────
+# -- Versioning models ---------------------------------------------------------
 
 
 class CredentialVersion(BaseModel):
@@ -89,7 +114,7 @@ class CredentialVersionResponse(BaseModel):
     is_current: bool
 
 
-# ── Auto-rotation models ─────────────────────────────────────────────────────
+# -- Auto-rotation models -----------------------------------------------------
 
 
 class AutoRotationConfig(BaseModel):
