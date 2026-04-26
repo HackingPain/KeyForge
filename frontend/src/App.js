@@ -32,6 +32,7 @@ import CredentialProxy from "./components/CredentialProxy";
 import BackupManager from "./components/BackupManager";
 import ExpirationPolicy from "./components/ExpirationPolicy";
 import FieldEncryption from "./components/FieldEncryption";
+import Profile from "./components/Profile";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -39,6 +40,7 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [analysis, setAnalysis] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [advancedEnabled, setAdvancedEnabled] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +50,8 @@ function App() {
       .finally(() => { if (!cancelled) setAuthChecked(true); });
     const storedDark = localStorage.getItem('keyforge_dark_mode');
     if (storedDark === 'true') setDarkMode(true);
+    const storedAdvanced = localStorage.getItem('keyforge_advanced_enabled');
+    if (storedAdvanced === 'true') setAdvancedEnabled(true);
     return () => { cancelled = true; };
   }, []);
 
@@ -73,6 +77,14 @@ function App() {
     setLoggedIn(false);
   };
 
+  const handleToggleAdvanced = () => {
+    setAdvancedEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('keyforge_advanced_enabled', next ? 'true' : 'false');
+      return next;
+    });
+  };
+
   if (!authChecked) {
     return null;
   }
@@ -81,67 +93,82 @@ function App() {
     return <AuthScreen api={api} onAuth={handleAuth} />;
   }
 
-  const navGroups = [
+  const allNavGroups = [
+    {
+      label: 'Account',
+      items: [
+        { id: 'profile', name: 'Profile', icon: '\uD83D\uDC64', tier: 'basic' },
+      ],
+    },
     {
       label: 'Overview',
       items: [
-        { id: 'dashboard', name: 'Dashboard', icon: '\uD83D\uDCCA' },
-        { id: 'analyzer', name: 'Project Analyzer', icon: '\uD83D\uDD0D' },
-        { id: 'credentials', name: 'Credentials', icon: '\uD83D\uDD10' },
+        { id: 'dashboard', name: 'Dashboard', icon: '\uD83D\uDCCA', tier: 'basic' },
+        { id: 'analyzer', name: 'Project Analyzer', icon: '\uD83D\uDD0D', tier: 'advanced' },
+        { id: 'credentials', name: 'Credentials', icon: '\uD83D\uDD10', tier: 'basic' },
       ],
     },
     {
       label: 'Management',
       items: [
-        { id: 'rotation', name: 'Key Rotation', icon: '\uD83D\uDD04' },
-        { id: 'groups', name: 'Credential Groups', icon: '\uD83D\uDCC1' },
-        { id: 'teams', name: 'Teams', icon: '\uD83D\uDC65' },
-        { id: 'health', name: 'Health Checks', icon: '\uD83C\uDFE5' },
-        { id: 'versions', name: 'Version History', icon: '\uD83D\uDCDC' },
-        { id: 'auto-rotation', name: 'Auto-Rotation', icon: '\u2699\uFE0F' },
-        { id: 'expirations', name: 'Expiration Tracker', icon: '\u23F0' },
+        { id: 'rotation', name: 'Key Rotation', icon: '\uD83D\uDD04', tier: 'advanced' },
+        { id: 'groups', name: 'Credential Groups', icon: '\uD83D\uDCC1', tier: 'advanced' },
+        { id: 'teams', name: 'Teams', icon: '\uD83D\uDC65', tier: 'advanced' },
+        { id: 'health', name: 'Health Checks', icon: '\uD83C\uDFE5', tier: 'advanced' },
+        { id: 'versions', name: 'Version History', icon: '\uD83D\uDCDC', tier: 'advanced' },
+        { id: 'auto-rotation', name: 'Auto-Rotation', icon: '\u2699\uFE0F', tier: 'advanced' },
+        { id: 'expirations', name: 'Expiration Tracker', icon: '\u23F0', tier: 'advanced' },
       ],
     },
     {
       label: 'Security',
       items: [
-        { id: 'scanner', name: 'Secret Scanner', icon: '\uD83D\uDEE1\uFE0F' },
-        { id: 'audit', name: 'Audit Log', icon: '\uD83D\uDCDD' },
-        { id: 'mfa', name: 'MFA Setup', icon: '\uD83D\uDD10' },
-        { id: 'sessions', name: 'Sessions', icon: '\uD83D\uDCBB' },
-        { id: 'ip-allowlist', name: 'IP Allowlist', icon: '\uD83C\uDF10' },
-        { id: 'breach-detection', name: 'Breach Detection', icon: '\uD83D\uDEA8' },
-        { id: 'permissions', name: 'Permissions', icon: '\uD83D\uDC64' },
+        { id: 'scanner', name: 'Secret Scanner', icon: '\uD83D\uDEE1\uFE0F', tier: 'advanced' },
+        { id: 'audit', name: 'Audit Log', icon: '\uD83D\uDCDD', tier: 'basic' },
+        { id: 'mfa', name: 'MFA Setup', icon: '\uD83D\uDD10', tier: 'basic' },
+        { id: 'sessions', name: 'Sessions', icon: '\uD83D\uDCBB', tier: 'advanced' },
+        { id: 'ip-allowlist', name: 'IP Allowlist', icon: '\uD83C\uDF10', tier: 'advanced' },
+        { id: 'breach-detection', name: 'Breach Detection', icon: '\uD83D\uDEA8', tier: 'advanced' },
+        { id: 'permissions', name: 'Permissions', icon: '\uD83D\uDC64', tier: 'advanced' },
       ],
     },
     {
       label: 'Infrastructure',
       items: [
-        { id: 'envelope-encryption', name: 'Envelope Encryption', icon: '\uD83D\uDD10' },
-        { id: 'kms-manager', name: 'KMS Manager', icon: '\uD83D\uDDDD\uFE0F' },
-        { id: 'audit-integrity', name: 'Audit Integrity', icon: '\uD83D\uDD17' },
-        { id: 'credential-proxy', name: 'Credential Proxy', icon: '\uD83C\uDFAB' },
-        { id: 'backup-manager', name: 'Backup Manager', icon: '\uD83D\uDCBE' },
-        { id: 'expiration-policy', name: 'Expiration Policy', icon: '\uD83D\uDCCB' },
-        { id: 'field-encryption', name: 'Field Encryption', icon: '\uD83D\uDD12' },
+        { id: 'envelope-encryption', name: 'Envelope Encryption', icon: '\uD83D\uDD10', tier: 'advanced' },
+        { id: 'kms-manager', name: 'KMS Manager', icon: '\uD83D\uDDDD\uFE0F', tier: 'advanced' },
+        { id: 'audit-integrity', name: 'Audit Integrity', icon: '\uD83D\uDD17', tier: 'advanced' },
+        { id: 'credential-proxy', name: 'Credential Proxy', icon: '\uD83C\uDFAB', tier: 'advanced' },
+        { id: 'backup-manager', name: 'Backup Manager', icon: '\uD83D\uDCBE', tier: 'advanced' },
+        { id: 'expiration-policy', name: 'Expiration Policy', icon: '\uD83D\uDCCB', tier: 'advanced' },
+        { id: 'field-encryption', name: 'Field Encryption', icon: '\uD83D\uDD12', tier: 'advanced' },
       ],
     },
     {
       label: 'Analytics',
       items: [
-        { id: 'usage-analytics', name: 'Usage Analytics', icon: '\uD83D\uDCC8' },
-        { id: 'compliance', name: 'Compliance Center', icon: '\u2705' },
-        { id: 'costs', name: 'Cost Estimation', icon: '\uD83D\uDCB0' },
+        { id: 'usage-analytics', name: 'Usage Analytics', icon: '\uD83D\uDCC8', tier: 'advanced' },
+        { id: 'compliance', name: 'Compliance Center', icon: '\u2705', tier: 'advanced' },
+        { id: 'costs', name: 'Cost Estimation', icon: '\uD83D\uDCB0', tier: 'advanced' },
       ],
     },
     {
       label: 'Tools',
       items: [
-        { id: 'import-export', name: 'Import / Export', icon: '\uD83D\uDCE6' },
-        { id: 'webhooks', name: 'Webhooks', icon: '\uD83D\uDD14' },
+        { id: 'import-export', name: 'Import / Export', icon: '\uD83D\uDCE6', tier: 'advanced' },
+        { id: 'webhooks', name: 'Webhooks', icon: '\uD83D\uDD14', tier: 'advanced' },
       ],
     },
   ];
+
+  const navGroups = advancedEnabled
+    ? allNavGroups
+    : allNavGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => item.tier === 'basic'),
+        }))
+        .filter((group) => group.items.length > 0);
 
   return (
     <div className={`min-h-screen bg-gray-50 ${darkMode ? 'dark' : ''}`}>
@@ -212,6 +239,25 @@ function App() {
                 ))}
               </div>
             ))}
+
+            {/* Advanced toggle */}
+            <div className="mt-2 px-3 py-3 border-t border-gray-200">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-xs font-medium text-gray-600">Show advanced</span>
+                <span className="relative inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-label="Show advanced features"
+                    checked={advancedEnabled}
+                    onChange={handleToggleAdvanced}
+                    className="sr-only peer"
+                  />
+                  <span className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors"></span>
+                  <span className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></span>
+                </span>
+              </label>
+            </div>
           </nav>
 
           {/* Main Content */}
@@ -255,6 +301,14 @@ function App() {
             {currentView === 'costs' && <CostEstimation api={api} />}
             {currentView === 'import-export' && <ImportExport api={api} />}
             {currentView === 'webhooks' && <WebhookManager api={api} />}
+            {currentView === 'profile' && (
+              <Profile
+                api={api}
+                advancedEnabled={advancedEnabled}
+                onToggleAdvanced={handleToggleAdvanced}
+                onLogout={handleLogout}
+              />
+            )}
           </main>
         </div>
       </div>

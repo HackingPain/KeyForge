@@ -16,6 +16,7 @@ jest.mock('../api', () => ({
   },
 }));
 
+// Mock every component so the test focuses on the sidebar.
 jest.mock('../components/Dashboard', () => () => <div data-testid="dashboard">Dashboard</div>);
 jest.mock('../components/AuthScreen', () => ({ onAuth }) => (
   <div data-testid="auth-screen">
@@ -53,100 +54,109 @@ jest.mock('../components/ExpirationPolicy', () => () => <div data-testid="exp-po
 jest.mock('../components/FieldEncryption', () => () => <div data-testid="field-encryption">FieldEnc</div>);
 jest.mock('../components/Profile', () => () => <div data-testid="profile">Profile</div>);
 
+const BASIC_ITEMS = ['Dashboard', 'Credentials', 'Audit Log', 'MFA Setup', 'Profile'];
+const ADVANCED_SAMPLE = [
+  'Project Analyzer',
+  'Key Rotation',
+  'Credential Groups',
+  'Teams',
+  'KMS Manager',
+  'Envelope Encryption',
+  'Field Encryption',
+  'Audit Integrity',
+  'IP Allowlist',
+  'Cost Estimation',
+];
+
+function getSidebar() {
+  // The sidebar is the only <nav> in the rendered tree.
+  return document.querySelector('nav');
+}
+
+function sidebarItemNames() {
+  const nav = getSidebar();
+  if (!nav) return [];
+  // Each nav item is a <button> with an icon <span> followed by the name text.
+  // We strip the icon span and keep the name only.
+  return Array.from(nav.querySelectorAll('button')).map((btn) => {
+    const clone = btn.cloneNode(true);
+    const iconSpan = clone.querySelector('span');
+    if (iconSpan) iconSpan.remove();
+    return clone.textContent.trim();
+  }).filter((t) => t.length > 0);
+}
+
 function mockAuthCheckSuccess() {
   api.get.mockResolvedValue({ data: { id: 'u1', username: 'tester' } });
 }
 
-function mockAuthCheckUnauthenticated() {
-  api.get.mockRejectedValue({ response: { status: 401 } });
-}
-
-describe('App', () => {
+describe('Sidebar Basic/Advanced filtering', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.getItem.mockReturnValue(null);
     document.documentElement.classList.remove('dark');
   });
 
-  test('renders AuthScreen when /auth/me returns 401', async () => {
-    mockAuthCheckUnauthenticated();
-    await act(async () => { render(<App />); });
-    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
-  });
-
-  test('renders Dashboard when /auth/me succeeds (cookie session)', async () => {
-    mockAuthCheckSuccess();
-    await act(async () => { render(<App />); });
-    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
-  });
-
-  test('navigates from AuthScreen to Dashboard after login', async () => {
-    mockAuthCheckUnauthenticated();
-    await act(async () => { render(<App />); });
-    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
-
-    await act(async () => { fireEvent.click(screen.getByText('Login')); });
-
-    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
-  });
-
-  test('navigation works - clicking nav items changes view', async () => {
+  test('default view shows only the Basic set, no advanced items', async () => {
     mockAuthCheckSuccess();
     await act(async () => { render(<App />); });
     await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Credentials'));
-    expect(screen.getByTestId('credentials')).toBeInTheDocument();
+    const items = sidebarItemNames();
 
-    fireEvent.click(screen.getByText('Audit Log'));
-    expect(screen.getByTestId('audit')).toBeInTheDocument();
+    // Every Basic item must be visible.
+    for (const name of BASIC_ITEMS) {
+      expect(items).toContain(name);
+    }
 
-    fireEvent.click(screen.getByText('Dashboard'));
-    expect(screen.getByTestId('dashboard')).toBeInTheDocument();
+    // No advanced items must be in the sidebar.
+    for (const name of ADVANCED_SAMPLE) {
+      expect(items).not.toContain(name);
+    }
+
+    // Acceptance: fewer than 8 sidebar items.
+    expect(items.length).toBeLessThan(8);
+    // And the count is exactly the Basic set.
+    expect(items.length).toBe(BASIC_ITEMS.length);
   });
 
-  test('logout calls /auth/logout and shows AuthScreen', async () => {
-    mockAuthCheckSuccess();
-    api.post.mockResolvedValue({ data: { status: 'ok' } });
-    await act(async () => { render(<App />); });
-    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
-
-    await act(async () => { fireEvent.click(screen.getByText('Logout')); });
-
-    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
-    expect(api.post).toHaveBeenCalledWith('/auth/logout');
-  });
-
-  test('dark mode toggle works', async () => {
+  test('clicking the advanced toggle reveals advanced items', async () => {
     mockAuthCheckSuccess();
     await act(async () => { render(<App />); });
     await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    const toggleButton = screen.getByTitle('Switch to dark mode');
-    fireEvent.click(toggleButton);
+    // Verify advanced items are absent first.
+    expect(sidebarItemNames()).not.toContain('KMS Manager');
 
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(localStorage.setItem).toHaveBeenCalledWith('keyforge_dark_mode', true);
+    const toggle = screen.getByLabelText('Show advanced features');
+    await act(async () => { fireEvent.click(toggle); });
+
+    const itemsAfter = sidebarItemNames();
+    expect(itemsAfter).toContain('KMS Manager');
+    expect(itemsAfter).toContain('Envelope Encryption');
+    expect(itemsAfter).toContain('Teams');
+    // localStorage should have been updated.
+    expect(localStorage.setItem).toHaveBeenCalledWith('keyforge_advanced_enabled', 'true');
   });
 
-  test('renders KeyForge header branding when authenticated', async () => {
-    mockAuthCheckSuccess();
-    await act(async () => { render(<App />); });
-    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
-    expect(screen.getByText('KeyForge')).toBeInTheDocument();
-    expect(screen.getByText('Universal API Infrastructure Assistant')).toBeInTheDocument();
-  });
-
-  test('navigating to Teams view renders TeamManager', async () => {
+  test('localStorage keyforge_advanced_enabled=true shows advanced on initial render', async () => {
     mockAuthCheckSuccess();
     localStorage.getItem.mockImplementation((key) => {
       if (key === 'keyforge_advanced_enabled') return 'true';
       return null;
     });
+
     await act(async () => { render(<App />); });
     await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Teams'));
-    expect(screen.getByTestId('teams')).toBeInTheDocument();
+    const items = sidebarItemNames();
+    expect(items).toContain('KMS Manager');
+    expect(items).toContain('Envelope Encryption');
+    expect(items).toContain('Field Encryption');
+    expect(items).toContain('Audit Integrity');
+    // Basic items still present.
+    for (const name of BASIC_ITEMS) {
+      expect(items).toContain(name);
+    }
   });
 });
