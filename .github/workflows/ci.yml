@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r backend/requirements.txt
+      - run: pip install -r requirements.txt
       - run: pip install flake8 black isort mypy
       - run: black --check backend/
       - run: isort --check-only backend/
@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r backend/requirements.txt
+      - run: pip install -r requirements.txt
       - run: pip install pytest pytest-asyncio pytest-cov httpx
       - name: Run tests
         env:
@@ -95,5 +95,5 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install safety bandit
-      - run: safety check -r backend/requirements.txt || true
+      - run: safety check -r requirements.txt || true
       - run: bandit -r backend/ -ll --skip B101 || true

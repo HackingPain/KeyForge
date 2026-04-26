@@ -1,0 +1,60 @@
+# Node modules (host-side, would clobber image-side install)
+node_modules
+frontend/node_modules
+tools/vscode_extension/node_modules
+
+# Python bytecode and caches
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv
+.venv
+env
+
+# Version control
+.git
+.gitignore
+
+# Tests and end-to-end suites (not needed in runtime image)
+tests/
+e2e/
+
+# Frontend build artifacts (rebuilt inside the image)
+frontend/build
+
+# Environment files (secrets, never bake into images)
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Documentation (bloats image, not needed at runtime)
+*.md
+
+# Project task tracking
+tasks/
+
+# CI and editor configs
+.github/
+.claude/
+.vscode/
+.idea/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage and Python build artifacts
+coverage/
+.coverage
+dist/
+build/
+*.egg-info/
