@@ -132,7 +132,7 @@ describe('AuthScreen', () => {
     expect(mockOnAuth).not.toHaveBeenCalled();
   });
 
-  test('calls onAuth with token on successful login', async () => {
+  test('calls onAuth with no arguments on successful login', async () => {
     mockApi.post.mockResolvedValueOnce({
       data: { access_token: 'my-jwt-token' },
     });
@@ -148,7 +148,7 @@ describe('AuthScreen', () => {
     fireEvent.click(screen.getByText('Sign In'));
 
     await waitFor(() => {
-      expect(mockOnAuth).toHaveBeenCalledWith('my-jwt-token');
+      expect(mockOnAuth).toHaveBeenCalledWith();
     });
   });
 

@@ -1,22 +1,25 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import App from '../App';
+import api from '../api';
 
-// Mock api module
 jest.mock('../api', () => ({
-  get: jest.fn().mockResolvedValue({ data: {} }),
-  post: jest.fn().mockResolvedValue({ data: {} }),
-  delete: jest.fn().mockResolvedValue({ data: {} }),
-  interceptors: {
-    request: { use: jest.fn() },
-    response: { use: jest.fn() },
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
   },
 }));
 
-// Mock all child components to isolate App testing
-jest.mock('../components/Dashboard', () => () => <div data-testid="dashboard">Dashboard Component</div>);
+jest.mock('../components/Dashboard', () => () => <div data-testid="dashboard">Dashboard</div>);
 jest.mock('../components/AuthScreen', () => ({ onAuth }) => (
   <div data-testid="auth-screen">
-    <button onClick={() => onAuth('test-token')}>Login</button>
+    <button onClick={() => onAuth()}>Login</button>
   </div>
 ));
 jest.mock('../components/CredentialManager', () => () => <div data-testid="credentials">Credentials</div>);
@@ -41,6 +44,21 @@ jest.mock('../components/AutoRotation', () => () => <div data-testid="auto-rotat
 jest.mock('../components/BreachDetection', () => () => <div data-testid="breach-detection">BreachDetection</div>);
 jest.mock('../components/UsageAnalytics', () => () => <div data-testid="usage-analytics">UsageAnalytics</div>);
 jest.mock('../components/ComplianceCenter', () => () => <div data-testid="compliance">Compliance</div>);
+jest.mock('../components/EnvelopeEncryption', () => () => <div data-testid="envelope">Envelope</div>);
+jest.mock('../components/KMSManager', () => () => <div data-testid="kms">KMS</div>);
+jest.mock('../components/AuditIntegrity', () => () => <div data-testid="audit-integrity">AuditIntegrity</div>);
+jest.mock('../components/CredentialProxy', () => () => <div data-testid="proxy">Proxy</div>);
+jest.mock('../components/BackupManager', () => () => <div data-testid="backups">Backups</div>);
+jest.mock('../components/ExpirationPolicy', () => () => <div data-testid="exp-policy">ExpPolicy</div>);
+jest.mock('../components/FieldEncryption', () => () => <div data-testid="field-encryption">FieldEnc</div>);
+
+function mockAuthCheckSuccess() {
+  api.get.mockResolvedValue({ data: { id: 'u1', username: 'tester' } });
+}
+
+function mockAuthCheckUnauthenticated() {
+  api.get.mockRejectedValue({ response: { status: 401 } });
+}
 
 describe('App', () => {
   beforeEach(() => {
@@ -49,78 +67,60 @@ describe('App', () => {
     document.documentElement.classList.remove('dark');
   });
 
-  test('renders AuthScreen when no token is stored', () => {
-    localStorage.getItem.mockReturnValue(null);
-    render(<App />);
-    expect(screen.getByTestId('auth-screen')).toBeInTheDocument();
+  test('renders AuthScreen when /auth/me returns 401', async () => {
+    mockAuthCheckUnauthenticated();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
   });
 
-  test('renders Dashboard when token exists in localStorage', () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
-    expect(screen.getByTestId('dashboard')).toBeInTheDocument();
+  test('renders Dashboard when /auth/me succeeds (cookie session)', async () => {
+    mockAuthCheckSuccess();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
   });
 
   test('navigates from AuthScreen to Dashboard after login', async () => {
-    localStorage.getItem.mockReturnValue(null);
-    render(<App />);
-    expect(screen.getByTestId('auth-screen')).toBeInTheDocument();
+    mockAuthCheckUnauthenticated();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Login'));
+    await act(async () => { fireEvent.click(screen.getByText('Login')); });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('dashboard')).toBeInTheDocument();
-    });
-    expect(localStorage.setItem).toHaveBeenCalledWith('keyforge_token', 'test-token');
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
   });
 
-  test('navigation works - clicking nav items changes view', () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
+  test('navigation works - clicking nav items changes view', async () => {
+    mockAuthCheckSuccess();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    // Click on Credentials nav item
     fireEvent.click(screen.getByText('Credentials'));
     expect(screen.getByTestId('credentials')).toBeInTheDocument();
 
-    // Click on Audit Log nav item
     fireEvent.click(screen.getByText('Audit Log'));
     expect(screen.getByTestId('audit')).toBeInTheDocument();
 
-    // Click back to Dashboard
     fireEvent.click(screen.getByText('Dashboard'));
     expect(screen.getByTestId('dashboard')).toBeInTheDocument();
   });
 
-  test('logout clears token and shows AuthScreen', async () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
-    expect(screen.getByTestId('dashboard')).toBeInTheDocument();
+  test('logout calls /auth/logout and shows AuthScreen', async () => {
+    mockAuthCheckSuccess();
+    api.post.mockResolvedValue({ data: { status: 'ok' } });
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Logout'));
+    await act(async () => { fireEvent.click(screen.getByText('Logout')); });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('auth-screen')).toBeInTheDocument();
-    });
-    expect(localStorage.removeItem).toHaveBeenCalledWith('keyforge_token');
+    await waitFor(() => expect(screen.getByTestId('auth-screen')).toBeInTheDocument());
+    expect(api.post).toHaveBeenCalledWith('/auth/logout');
   });
 
-  test('dark mode toggle works', () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
+  test('dark mode toggle works', async () => {
+    mockAuthCheckSuccess();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
-    // Find the dark mode toggle button by its title
     const toggleButton = screen.getByTitle('Switch to dark mode');
     fireEvent.click(toggleButton);
 
@@ -128,22 +128,18 @@ describe('App', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('keyforge_dark_mode', true);
   });
 
-  test('renders KeyForge header branding when authenticated', () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
+  test('renders KeyForge header branding when authenticated', async () => {
+    mockAuthCheckSuccess();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
     expect(screen.getByText('KeyForge')).toBeInTheDocument();
     expect(screen.getByText('Universal API Infrastructure Assistant')).toBeInTheDocument();
   });
 
-  test('navigating to Teams view renders TeamManager', () => {
-    localStorage.getItem.mockImplementation((key) => {
-      if (key === 'keyforge_token') return 'stored-token';
-      return null;
-    });
-    render(<App />);
+  test('navigating to Teams view renders TeamManager', async () => {
+    mockAuthCheckSuccess();
+    await act(async () => { render(<App />); });
+    await waitFor(() => expect(screen.getByTestId('dashboard')).toBeInTheDocument());
 
     fireEvent.click(screen.getByText('Teams'));
     expect(screen.getByTestId('teams')).toBeInTheDocument();
