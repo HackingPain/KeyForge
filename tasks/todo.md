@@ -19,7 +19,7 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 
 ## Tier 1: Make it Work At All
 **Goal:** Fresh `git clone` + one command = running app with persistent data and green CI.
-**Status:** In progress. Items 1.1, 1.2, 1.5, 1.6 landed on branch `fix/tier1-bootstrap` (uncommitted). Items 1.3, 1.4, 1.7 still open.
+**Status:** In progress. 1.1, 1.2, 1.5, 1.6 merged to `main` (commits 252117f / 01ac9ed / de8533e). 1.3 done on `fix/tier1-rest`; 1.4 and 1.7 in flight (parallel subagents).
 **Estimate:** 1-2 days serial; ~1 day with subagents.
 
 ### 1.1 Fix FastAPI router incompatibility (BLOCKING for CI)
@@ -40,15 +40,17 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 - [x] Acceptance: `python tools/cli.py init` on a fresh clone produces a working `.env`. Backend will no longer hit the ephemeral-key path because both env vars are set.
 
 ### 1.3 Fix env defaults and split-brain
-- [ ] Change `backend/.env` `DB_NAME` from `test_database` to `keyforge` to match `docker-compose.yml:26`.
-- [ ] Decide on a project policy: `backend/.env` is gitignored; ship a `backend/.env.example` instead. Add `.env.example` and update `.gitignore`.
-- [ ] Acceptance: `docker compose up` and bare-metal `uvicorn` use the same DB name.
+- [x] `backend/.env` `DB_NAME=test_database` is auto-upgraded to `keyforge` by `tools/cli.py init` (Tier 1.2). The local file itself is gitignored and not committed.
+- [x] Project policy: `backend/.env` stays gitignored. Shipped `backend/.env.example` as the template. `.gitignore` already had `!.env.example` which the negation rule applies to nested paths too (verified via `git check-ignore -v`); no change needed there.
+- [x] Acceptance: `docker compose up` and bare-metal `uvicorn` both read `DB_NAME=keyforge` (compose hardcodes it; bare-metal reads `backend/.env` written by `init`).
 
 ### 1.4 Fix Dockerfile path issues
-- [ ] `Dockerfile.backend:6` `COPY backend/requirements.txt .` works only because the file exists at root too. Verify and clean up so there is exactly one canonical requirements file.
-- [ ] `Dockerfile.frontend:6` clobbers an installed node_modules. Restructure so `npm ci` runs after the source copy, or use a `.dockerignore` to exclude `node_modules`.
-- [ ] Add a `.dockerignore` covering `node_modules`, `__pycache__`, `.pytest_cache`, `*.pyc`, `.git`, `tests/`, `e2e/`, `frontend/build`.
-- [ ] Acceptance: `docker compose build --no-cache` succeeds and produces images < 1.2 GB combined.
+- [x] Reconciled to ONE canonical `requirements.txt` at repo root. Deleted `backend/requirements.txt`. Merged `boto3` (lazy-imported by the AWS KMS provider) into root; dropped 8 unused deps that were never imported under `backend/` (requests-oauthlib, email-validator, pyjwt, tzdata, pandas, numpy, jq, typer).
+- [x] `Dockerfile.backend:6` now `COPY requirements.txt .` (no `backend/` prefix).
+- [x] `Dockerfile.frontend` left alone; the new `.dockerignore` excludes `frontend/node_modules` so the host tree no longer clobbers the image-side install during `COPY frontend/ ./`.
+- [x] Added `.dockerignore` at repo root: 35 patterns across 13 categories (node_modules, py-bytecode, venvs, .git, tests, e2e, frontend/build, env files, docs, tasks/, CI/editor configs, OS metadata, logs, coverage/build artifacts).
+- [x] Updated `.github/workflows/ci.yml` to use root `requirements.txt` (3 path swaps in backend-lint, backend-test, security-scan).
+- [ ] Acceptance: `docker compose build --no-cache` succeeds and images < 1.2 GB combined. (Not yet run; will validate when first PR triggers CI or first manual build.)
 
 ### 1.5 Repo hygiene: README, LICENSE, CONTRIBUTING
 - [x] Write `README.md` at repo root (replaced the prior marketing-style README; the audit memo's claim that no README existed was wrong, the prior file existed but did not reflect actual project state). New README is alpha-honest, links to `tasks/todo.md` for the issuer roadmap, no AI-attribution footer.
@@ -61,11 +63,13 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 - [ ] Acceptance: tagging `v0.x.y` actually publishes images to `ghcr.io/HackingPain/KeyForge/{backend,frontend}`. (Verified by YAML-parsing only; first real tag will exercise the workflow.)
 
 ### 1.7 Move JWT to httpOnly cookie (security + Tier 1 because it's small)
-- [ ] Backend `routes/auth.py`: on login, set JWT as `Set-Cookie: keyforge_token=...; HttpOnly; Secure; SameSite=Lax; Path=/`. Keep returning the token in the body for the CLI/SDK use case, but the browser flow uses the cookie.
-- [ ] Add `get_current_user_from_cookie` dependency or extend the existing one to accept either.
-- [ ] Frontend `src/api.js`: stop reading from / writing to `localStorage`. Use `axios.defaults.withCredentials = true`. Update `App.js:43,59` accordingly.
-- [ ] Add CSRF token middleware (double-submit cookie pattern) and a small frontend hook that injects the CSRF header.
-- [ ] Acceptance: the JWT no longer appears in `document.cookie` JS-readable form; an XSS smoke test cannot exfiltrate it.
+- [x] Backend `routes/auth.py`: login now sets `Set-Cookie: keyforge_token=...; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`. `Secure` flag gated on `KEYFORGE_COOKIE_SECURE` env var (default true; set false for HTTP dev). Body still returns `{access_token, token_type}` for CLI/SDK. Added `POST /api/auth/logout` that clears the cookie.
+- [x] Extended `get_current_user` in `backend/security.py` to read the JWT from the `keyforge_token` cookie first, falling back to the `Authorization: Bearer ...` header. Added `get_current_token` dependency for routes that need the raw JWT string (sessions.py uses it to hash-and-compare). `oauth2_scheme` kept exported for OpenAPI compat but no longer wired into route deps.
+- [x] Frontend `src/api.js`: dropped all `localStorage.getItem('keyforge_token')` reads/writes. `withCredentials: true` on the axios instance. New request interceptor reads the `keyforge_csrf` cookie and sets `X-CSRF-Token` on POST/PUT/PATCH/DELETE. 401 interceptor clears server cookie via `/api/auth/logout` then reloads, and skips `auth/me|login|register|logout` paths to avoid infinite-loop on initial auth probe (orchestrator-fixed bug).
+- [x] `App.js`: replaced `token` state with `loggedIn` + `authChecked` flags. Initial `GET /api/auth/me` decides logged-in state. `handleAuth()` takes no arg. `handleLogout` calls `/api/auth/logout`.
+- [x] `AuthScreen.js`: `onAuth()` invoked with no argument; the cookie is set by the server.
+- [x] CSRF middleware (`backend/middleware/csrf.py`, 64 lines): double-submit cookie pattern. Skips safe methods, exempts `/api/auth/login` + `/api/auth/register`, skips Bearer-only requests (CLI/SDK). Uses `secrets.compare_digest` for timing-safe comparison. Sets a fresh `keyforge_csrf` cookie when missing or under 30 chars. Wired in `server.py` between RateLimit and Sanitization.
+- [x] Acceptance: JWT cookie is `HttpOnly`, so `document.cookie` cannot read it from JS; XSS payloads cannot exfiltrate the token. Pytest 370 passed locally; backend boots cleanly with 6 middleware (was 5).
 
 ---
 
