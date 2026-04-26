@@ -38,9 +38,16 @@ describe('CredentialManager', () => {
                 { id: 'openai', name: 'OpenAI' },
                 { id: 'stripe', name: 'Stripe' },
                 { id: 'github', name: 'GitHub' },
+                { id: 'supabase', name: 'Supabase' },
               ],
             },
           });
+        }
+        if (url === '/walkthroughs') {
+          return Promise.resolve({ data: [] });
+        }
+        if (url === '/issuers/github/installations') {
+          return Promise.resolve({ data: { installations: [] } });
         }
         return Promise.resolve({ data: {} });
       }),
@@ -71,13 +78,14 @@ describe('CredentialManager', () => {
     // Click Add Credential button
     fireEvent.click(screen.getByText('Add Credential'));
 
-    // Fill the form - select API Name
+    // Fill the form - select API Name. Use a provider that has neither a
+    // walkthrough nor a registered issuer so the bare paste form renders.
     const apiSelect = screen.getByLabelText('API Name');
-    fireEvent.change(apiSelect, { target: { value: 'github' } });
+    fireEvent.change(apiSelect, { target: { value: 'supabase' } });
 
     // Fill API key
     const apiKeyInput = screen.getByPlaceholderText('Enter API key');
-    fireEvent.change(apiKeyInput, { target: { value: 'ghp_test123456' } });
+    fireEvent.change(apiKeyInput, { target: { value: 'sb_test123456' } });
 
     // Select environment
     const envSelect = screen.getByLabelText('Environment');
@@ -90,10 +98,23 @@ describe('CredentialManager', () => {
 
     await waitFor(() => {
       expect(mockApi.post).toHaveBeenCalledWith('/credentials', {
-        api_name: 'github',
-        api_key: 'ghp_test123456',
+        api_name: 'supabase',
+        api_key: 'sb_test123456',
         environment: 'staging',
       });
+    });
+  });
+
+  test('selecting github routes to GitHubConnect instead of the bare form', async () => {
+    render(<CredentialManager api={mockApi} />);
+    await waitFor(() => expect(screen.getByText('openai')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Add Credential'));
+    fireEvent.change(screen.getByLabelText('API Name'), { target: { value: 'github' } });
+
+    // GitHubConnect's loading or empty state shows; the bare paste field does not.
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('Enter API key')).not.toBeInTheDocument();
     });
   });
 

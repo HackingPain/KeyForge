@@ -103,9 +103,9 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 - [ ] Acceptance: Stripe and OpenAI both have walkthroughs that a non-technical user can follow start to finish.
 
 ### 2.5 Make auto-rotation real (not "simulated")
-- [ ] `backend/routes/auto_rotation.py:208-267` currently returns `status="simulated"`. Replace with calls into the new issuer interface: `issuer.mint_scoped_credential` for the same scope, then update the credential record.
-- [ ] Schedule via the existing rotation tracker; surface failures in the audit log.
-- [ ] Acceptance: a credential with a 7-day rotation policy actually gets rotated on day 7 with a new value, not a status string.
+- [x] `backend/routes/auto_rotation.py` trigger endpoint now drives `CredentialIssuer.mint_scoped_credential` end-to-end. Replaced the `status="simulated"` stub with seven status outcomes via a new `RotationStatus` enum in `backend/models_lifecycle.py`: `rotated`, `skipped_no_issuer`, `skipped_issuer_not_registered`, `skipped_unsupported`, `failed_auth`, `failed_upstream`, `failed`.
+- [x] Schedule advances via `db.auto_rotation_configs.update_one`; rotation failures and skips are written to the hash-chained audit log via `AuditIntegrity.create_audit_entry` with action `credential_auto_rotated` / `credential_auto_rotation_skipped` / `credential_auto_rotation_failed`. New value is snapshotted into `db.credential_versions` and the credential's `rotation_count` is incremented.
+- [x] Acceptance: 7 new tests in `tests/test_auto_rotation.py` exercise legacy-skip, mint-success, unsupported-issuer-skip, missing-issuer-skip, upstream-failure, auth-failure, and audit-write paths. Full suite: 433 passed.
 
 ---
 

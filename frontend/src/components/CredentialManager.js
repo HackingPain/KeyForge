@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import CredentialWalkthrough from "./CredentialWalkthrough";
+import GitHubConnect from "./GitHubConnect";
 
 const CredentialManager = ({ api }) => {
   const [credentials, setCredentials] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCredential, setNewCredential] = useState({ api_name: '', api_key: '', environment: 'development' });
   const [apiOptions, setApiOptions] = useState([]);
+  const [walkthroughProviders, setWalkthroughProviders] = useState([]);
   const [error, setError] = useState('');
   const [testingId, setTestingId] = useState(null);
   const [testResult, setTestResult] = useState(null);
@@ -12,6 +15,7 @@ const CredentialManager = ({ api }) => {
   useEffect(() => {
     fetchCredentials();
     fetchApiCatalog();
+    fetchWalkthroughProviders();
   }, []);
 
   const fetchApiCatalog = async () => {
@@ -31,6 +35,20 @@ const CredentialManager = ({ api }) => {
       ]);
     }
   };
+
+  const fetchWalkthroughProviders = async () => {
+    try {
+      const response = await api.get('/walkthroughs');
+      const providers = Array.isArray(response.data) ? response.data : [];
+      setWalkthroughProviders(providers.map(p => p.provider));
+    } catch (err) {
+      // No walkthroughs available; the bare paste form remains the fallback.
+      setWalkthroughProviders([]);
+    }
+  };
+
+  const hasWalkthrough = (provider) =>
+    Boolean(provider) && walkthroughProviders.includes(provider);
 
   const fetchCredentials = async () => {
     setError('');
@@ -129,7 +147,7 @@ const CredentialManager = ({ api }) => {
 
       {showAddForm && (
         <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-          <form onSubmit={handleAddCredential} className="space-y-4">
+          <div className="space-y-4">
             <div>
               <label htmlFor="api-name-select" className="block text-sm font-medium text-gray-700 mb-1">API Name</label>
               <select
@@ -146,47 +164,77 @@ const CredentialManager = ({ api }) => {
                   </option>
                 ))}
               </select>
+              {hasWalkthrough(newCredential.api_name) && (
+                <p className="mt-1 text-xs text-indigo-700">
+                  KeyForge has a guided walkthrough for this provider.
+                </p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
-              <input
-                type="password"
-                value={newCredential.api_key}
-                onChange={(e) => setNewCredential({...newCredential, api_key: e.target.value})}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter API key"
+
+            {newCredential.api_name === 'github' ? (
+              <GitHubConnect
+                api={api}
+                onCredentialMinted={() => {
+                  setNewCredential({ api_name: '', api_key: '', environment: 'development' });
+                  setShowAddForm(false);
+                  fetchCredentials();
+                }}
               />
-            </div>
-            <div>
-              <label htmlFor="environment-select" className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
-              <select
-                id="environment-select"
-                value={newCredential.environment}
-                onChange={(e) => setNewCredential({...newCredential, environment: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="development">Development</option>
-                <option value="staging">Staging</option>
-                <option value="production">Production</option>
-              </select>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-              >
-                Add Credential
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+            ) : hasWalkthrough(newCredential.api_name) ? (
+              <CredentialWalkthrough
+                api={api}
+                provider={newCredential.api_name}
+                onComplete={() => {
+                  setNewCredential({ api_name: '', api_key: '', environment: 'development' });
+                  setShowAddForm(false);
+                  fetchCredentials();
+                }}
+                onCancel={() => setShowAddForm(false)}
+              />
+            ) : (
+              <form onSubmit={handleAddCredential} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                  <input
+                    type="password"
+                    value={newCredential.api_key}
+                    onChange={(e) => setNewCredential({...newCredential, api_key: e.target.value})}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Enter API key"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="environment-select" className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+                  <select
+                    id="environment-select"
+                    value={newCredential.environment}
+                    onChange={(e) => setNewCredential({...newCredential, environment: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="development">Development</option>
+                    <option value="staging">Staging</option>
+                    <option value="production">Production</option>
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    type="submit"
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Add Credential
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
 

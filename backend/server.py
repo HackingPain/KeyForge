@@ -12,6 +12,9 @@ from starlette.middleware.cors import CORSMiddleware
 # Ensure the backend package is importable when running via `uvicorn server:app`
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Importing issuer modules triggers their module-level register_issuer calls.
+import backend.issuers.aws  # noqa: E402, F401
+import backend.issuers.github  # noqa: E402, F401
 import backend.migrations.versions  # noqa: E402, F401 - register migrations
 from backend.config import client, db  # noqa: E402
 from backend.middleware.csrf import CSRFMiddleware  # noqa: E402
@@ -75,6 +78,8 @@ from backend.routes.field_encryption import (  # noqa: E402
 from backend.routes.health_checks import router as health_checks_router  # noqa: E402
 from backend.routes.import_export import router as import_export_router  # noqa: E402
 from backend.routes.ip_allowlist import router as ip_allowlist_router  # noqa: E402
+from backend.routes.issuers_aws import router as issuers_aws_router  # noqa: E402
+from backend.routes.issuers_github import router as issuers_github_router  # noqa: E402
 from backend.routes.kms_admin import router as kms_admin_router  # noqa: E402
 from backend.routes.lifecycle import router as lifecycle_router  # noqa: E402
 
@@ -95,6 +100,7 @@ from backend.routes.usage_analytics import (  # noqa: E402
     router as usage_analytics_router,
 )
 from backend.routes.versioning import router as versioning_router  # noqa: E402
+from backend.routes.walkthroughs import router as walkthroughs_router  # noqa: E402
 from backend.routes.webhooks import router as webhooks_router  # noqa: E402
 
 # API documentation metadata
@@ -287,6 +293,11 @@ app.include_router(proxy_router)
 app.include_router(field_encryption_router)
 app.include_router(backup_router)
 app.include_router(expiration_policy_router)
+
+# Tier 2 - Issuer / walkthrough surface
+app.include_router(walkthroughs_router)
+app.include_router(issuers_github_router)
+app.include_router(issuers_aws_router)
 
 # Middleware stack (order matters - outermost first)
 # Security headers on every response
