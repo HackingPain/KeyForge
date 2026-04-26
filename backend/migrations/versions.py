@@ -70,3 +70,26 @@ async def add_encryption_metadata(db):
             "total_rotations": 0,
         }
     )
+
+
+@migration(6, "add_issuer_fields_to_credentials")
+async def add_issuer_fields_to_credentials(db):
+    """Backfill issuer-related fields on every existing credential document.
+
+    Tier 2 turns KeyForge into a credential issuer. Newly minted credentials
+    carry ``issuer``, ``issued_at``, ``revocable``, and ``scope`` metadata;
+    legacy/manual credentials predate that feature, so we backfill them with
+    safe defaults (``None`` / ``False``) so reads after the upgrade keep
+    working without per-document special-casing.
+    """
+    await db.credentials.update_many(
+        {"issuer": {"$exists": False}},
+        {
+            "$set": {
+                "issuer": None,
+                "issued_at": None,
+                "revocable": False,
+                "scope": None,
+            }
+        },
+    )

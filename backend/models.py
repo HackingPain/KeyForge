@@ -127,3 +127,11 @@ class Credential(BaseModel):
     environment: str = "development"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_id: str = ""  # Owner
+    # Issuer fields (Tier 2): set when KeyForge minted/issued the credential
+    # itself rather than receiving a pre-existing key from the user. All four
+    # default to None/False so legacy and manually-added credentials remain
+    # valid without migration of in-memory objects.
+    issuer: Optional[str] = None  # Registered issuer name, e.g. "github"
+    issued_at: Optional[datetime] = None
+    revocable: bool = False
+    scope: Optional[str] = None  # Provider-specific scope identifier
