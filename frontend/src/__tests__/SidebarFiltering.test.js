@@ -33,7 +33,6 @@ jest.mock('../components/CredentialGroups', () => () => <div data-testid="groups
 jest.mock('../components/SecretScanner', () => () => <div data-testid="scanner">Scanner</div>);
 jest.mock('../components/ImportExport', () => () => <div data-testid="import-export">ImportExport</div>);
 jest.mock('../components/WebhookManager', () => () => <div data-testid="webhooks">Webhooks</div>);
-jest.mock('../components/CostEstimation', () => () => <div data-testid="costs">Costs</div>);
 jest.mock('../components/HealthChecks', () => () => <div data-testid="health">Health</div>);
 jest.mock('../components/MFASetup', () => () => <div data-testid="mfa">MFA</div>);
 jest.mock('../components/SessionManager', () => () => <div data-testid="sessions">Sessions</div>);
@@ -42,7 +41,6 @@ jest.mock('../components/ExpirationTracker', () => () => <div data-testid="expir
 jest.mock('../components/CredentialPermissions', () => () => <div data-testid="permissions">Permissions</div>);
 jest.mock('../components/VersionHistory', () => () => <div data-testid="versions">Versions</div>);
 jest.mock('../components/AutoRotation', () => () => <div data-testid="auto-rotation">AutoRotation</div>);
-jest.mock('../components/BreachDetection', () => () => <div data-testid="breach-detection">BreachDetection</div>);
 jest.mock('../components/UsageAnalytics', () => () => <div data-testid="usage-analytics">UsageAnalytics</div>);
 jest.mock('../components/ComplianceCenter', () => () => <div data-testid="compliance">Compliance</div>);
 jest.mock('../components/EnvelopeEncryption', () => () => <div data-testid="envelope">Envelope</div>);

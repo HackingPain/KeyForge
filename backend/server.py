@@ -43,13 +43,7 @@ from backend.routes.auto_rotation import router as auto_rotation_router  # noqa:
 from backend.routes.backup import router as backup_router  # noqa: E402
 
 # Phase 5 routers - Analytics & Compliance
-from backend.routes.breach_detection import (  # noqa: E402
-    router as breach_detection_router,
-)
 from backend.routes.compliance import router as compliance_router  # noqa: E402
-from backend.routes.cost_estimation import (  # noqa: E402
-    router as cost_estimation_router,
-)
 from backend.routes.credential_groups import (  # noqa: E402
     router as credential_groups_router,
 )
@@ -262,7 +256,6 @@ app.include_router(credential_groups_router)
 app.include_router(scanning_router)
 app.include_router(import_export_router)
 app.include_router(webhooks_router)
-app.include_router(cost_estimation_router)
 
 # Phase 5 routers - Security
 app.include_router(mfa_router)
@@ -277,7 +270,6 @@ app.include_router(versioning_router)
 app.include_router(auto_rotation_router)
 
 # Phase 5 routers - Analytics & Compliance
-app.include_router(breach_detection_router)
 app.include_router(usage_analytics_router)
 app.include_router(compliance_router)
 app.include_router(lifecycle_router)

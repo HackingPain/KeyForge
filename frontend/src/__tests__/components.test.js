@@ -8,7 +8,6 @@ import CredentialGroups from '../components/CredentialGroups';
 import SecretScanner from '../components/SecretScanner';
 import ImportExport from '../components/ImportExport';
 import WebhookManager from '../components/WebhookManager';
-import CostEstimation from '../components/CostEstimation';
 import HealthChecks from '../components/HealthChecks';
 import MFASetup from '../components/MFASetup';
 import SessionManager from '../components/SessionManager';
@@ -17,7 +16,6 @@ import ExpirationTracker from '../components/ExpirationTracker';
 import CredentialPermissions from '../components/CredentialPermissions';
 import VersionHistory from '../components/VersionHistory';
 import AutoRotation from '../components/AutoRotation';
-import BreachDetection from '../components/BreachDetection';
 import UsageAnalytics from '../components/UsageAnalytics';
 import ComplianceCenter from '../components/ComplianceCenter';
 import ProjectAnalyzer from '../components/ProjectAnalyzer';
@@ -64,10 +62,6 @@ describe('Component smoke tests', () => {
       render(<IPAllowlist api={mockApi} />);
     });
 
-    test('BreachDetection renders without crashing', () => {
-      render(<BreachDetection api={mockApi} />);
-    });
-
     test('CredentialPermissions renders without crashing', () => {
       render(<CredentialPermissions api={mockApi} />);
     });
@@ -110,10 +104,6 @@ describe('Component smoke tests', () => {
 
     test('ComplianceCenter renders without crashing', () => {
       render(<ComplianceCenter api={mockApi} />);
-    });
-
-    test('CostEstimation renders without crashing', () => {
-      render(<CostEstimation api={mockApi} />);
     });
   });
 

@@ -93,3 +93,4 @@ test_result.md
 
 # Local git config
 .gitconfig
+.coverage

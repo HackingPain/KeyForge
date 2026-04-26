@@ -55,10 +55,6 @@ TAGS_METADATA = [
         "description": "Webhook notifications for credential events (expiration, test failure, etc).",
     },
     {
-        "name": "cost-estimation",
-        "description": "Estimate monthly costs for API services based on stored credentials.",
-    },
-    {
         "name": "mfa",
         "description": "Multi-factor authentication (TOTP) setup and management.",
     },
@@ -89,10 +85,6 @@ TAGS_METADATA = [
     {
         "name": "auto-rotation",
         "description": "Automatic credential rotation configuration for supported providers.",
-    },
-    {
-        "name": "breach-detection",
-        "description": "Check credentials against known breach patterns and compromised indicators.",
     },
     {
         "name": "usage-analytics",

@@ -13,7 +13,6 @@ import CredentialGroups from "./components/CredentialGroups";
 import SecretScanner from "./components/SecretScanner";
 import ImportExport from "./components/ImportExport";
 import WebhookManager from "./components/WebhookManager";
-import CostEstimation from "./components/CostEstimation";
 import HealthChecks from "./components/HealthChecks";
 import MFASetup from "./components/MFASetup";
 import SessionManager from "./components/SessionManager";
@@ -22,7 +21,6 @@ import ExpirationTracker from "./components/ExpirationTracker";
 import CredentialPermissions from "./components/CredentialPermissions";
 import VersionHistory from "./components/VersionHistory";
 import AutoRotation from "./components/AutoRotation";
-import BreachDetection from "./components/BreachDetection";
 import UsageAnalytics from "./components/UsageAnalytics";
 import ComplianceCenter from "./components/ComplianceCenter";
 import EnvelopeEncryption from "./components/EnvelopeEncryption";
@@ -32,6 +30,7 @@ import CredentialProxy from "./components/CredentialProxy";
 import BackupManager from "./components/BackupManager";
 import ExpirationPolicy from "./components/ExpirationPolicy";
 import FieldEncryption from "./components/FieldEncryption";
+import JargonTerm from "./components/JargonTerm";
 import Profile from "./components/Profile";
 
 function App() {
@@ -127,17 +126,16 @@ function App() {
         { id: 'audit', name: 'Audit Log', icon: '\uD83D\uDCDD', tier: 'basic' },
         { id: 'mfa', name: 'MFA Setup', icon: '\uD83D\uDD10', tier: 'basic' },
         { id: 'sessions', name: 'Sessions', icon: '\uD83D\uDCBB', tier: 'advanced' },
-        { id: 'ip-allowlist', name: 'IP Allowlist', icon: '\uD83C\uDF10', tier: 'advanced' },
-        { id: 'breach-detection', name: 'Breach Detection', icon: '\uD83D\uDEA8', tier: 'advanced' },
-        { id: 'permissions', name: 'Permissions', icon: '\uD83D\uDC64', tier: 'advanced' },
+        { id: 'ip-allowlist', name: <><JargonTerm term="IP">IP</JargonTerm> Allowlist</>, icon: '\uD83C\uDF10', tier: 'advanced' },
+        { id: 'permissions', name: <><JargonTerm term="RBAC">Permissions</JargonTerm></>, icon: '\uD83D\uDC64', tier: 'advanced' },
       ],
     },
     {
       label: 'Infrastructure',
       items: [
-        { id: 'envelope-encryption', name: 'Envelope Encryption', icon: '\uD83D\uDD10', tier: 'advanced' },
-        { id: 'kms-manager', name: 'KMS Manager', icon: '\uD83D\uDDDD\uFE0F', tier: 'advanced' },
-        { id: 'audit-integrity', name: 'Audit Integrity', icon: '\uD83D\uDD17', tier: 'advanced' },
+        { id: 'envelope-encryption', name: <><JargonTerm term="envelope encryption">Envelope Encryption</JargonTerm></>, icon: '\uD83D\uDD10', tier: 'advanced' },
+        { id: 'kms-manager', name: <><JargonTerm term="KMS">KMS</JargonTerm> Manager</>, icon: '\uD83D\uDDDD\uFE0F', tier: 'advanced' },
+        { id: 'audit-integrity', name: <><JargonTerm term="audit chain">Audit Integrity</JargonTerm></>, icon: '\uD83D\uDD17', tier: 'advanced' },
         { id: 'credential-proxy', name: 'Credential Proxy', icon: '\uD83C\uDFAB', tier: 'advanced' },
         { id: 'backup-manager', name: 'Backup Manager', icon: '\uD83D\uDCBE', tier: 'advanced' },
         { id: 'expiration-policy', name: 'Expiration Policy', icon: '\uD83D\uDCCB', tier: 'advanced' },
@@ -149,7 +147,6 @@ function App() {
       items: [
         { id: 'usage-analytics', name: 'Usage Analytics', icon: '\uD83D\uDCC8', tier: 'advanced' },
         { id: 'compliance', name: 'Compliance Center', icon: '\u2705', tier: 'advanced' },
-        { id: 'costs', name: 'Cost Estimation', icon: '\uD83D\uDCB0', tier: 'advanced' },
       ],
     },
     {
@@ -287,7 +284,6 @@ function App() {
             {currentView === 'mfa' && <MFASetup api={api} />}
             {currentView === 'sessions' && <SessionManager api={api} />}
             {currentView === 'ip-allowlist' && <IPAllowlist api={api} />}
-            {currentView === 'breach-detection' && <BreachDetection api={api} />}
             {currentView === 'permissions' && <CredentialPermissions api={api} />}
             {currentView === 'envelope-encryption' && <EnvelopeEncryption api={api} />}
             {currentView === 'kms-manager' && <KMSManager api={api} />}
@@ -298,7 +294,6 @@ function App() {
             {currentView === 'field-encryption' && <FieldEncryption api={api} />}
             {currentView === 'usage-analytics' && <UsageAnalytics api={api} />}
             {currentView === 'compliance' && <ComplianceCenter api={api} />}
-            {currentView === 'costs' && <CostEstimation api={api} />}
             {currentView === 'import-export' && <ImportExport api={api} />}
             {currentView === 'webhooks' && <WebhookManager api={api} />}
             {currentView === 'profile' && (

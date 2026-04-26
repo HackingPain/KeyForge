@@ -141,15 +141,15 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 
 ## Tier 4: Finish or Remove the Stubs
 **Goal:** Every UI element either does what it claims or is gone.
-**Status:** Not started.
+**Status:** 4.1 done on `feat/tier4-cleanup` (this branch). Five stubs decided: breach_detection + cost_estimation deleted, vscode_extension + kubernetes + terraform moved to `experimental/`. App.js sidebar prune is flagged for the orchestrator. 4.2 and 4.3 not started.
 **Estimate:** 2-3 days (mostly deletions and feature-flagging).
 
 ### 4.1 Decide and act on each stub
-- [ ] `backend/routes/breach_detection.py` returns hardcoded zeros. Decide: implement against HaveIBeenPwned or remove the route + UI.
-- [ ] `backend/routes/cost_estimation.py` returns "No pricing data available". Decide: ship a basic CSV-driven estimate or remove.
-- [ ] `tools/vscode_extension/`: implement the four commands or remove the directory.
-- [ ] `integrations/kubernetes/`: build, test, publish an image; or move to `experimental/` with a clear status.
-- [ ] `integrations/terraform/`: compile and publish the provider; or move to `experimental/`.
+- [x] DELETED `backend/routes/breach_detection.py`. The route returned hardcoded zeros and the matching `frontend/src/components/BreachDetection.js` rendered them as a "0 breaches detected" panel that was indistinguishable from a real clean scan. A real implementation requires HaveIBeenPwned (or equivalent) integration with k-anonymity range queries, hashing strategy, rate-limit handling, and a job runner; that is a multi-week feature on its own and is out of scope for the cleanup tier. Removed: backend route file, frontend component file, the `breach_detection_router` import + `include_router` line in `backend/server.py`, and the `breach-detection` tag entry in `backend/utils/api_docs.py`. Sidebar entry + import + switch case in `frontend/src/App.js` flagged for the orchestrator to prune in the integration commit.
+- [x] DELETED `backend/routes/cost_estimation.py`. The route returned the literal string "No pricing data available" for every call; the matching `frontend/src/components/CostEstimation.js` rendered an empty cost panel. A real implementation requires a CSV-driven pricing dataset per provider, a usage aggregation pipeline, and currency handling; out of scope for the cleanup tier. Removed: backend route file, frontend component file, the `cost_estimation_router` import + `include_router` line in `backend/server.py`, and the `cost-estimation` tag entry in `backend/utils/api_docs.py`. Sidebar entry + import + switch case in `frontend/src/App.js` flagged for the orchestrator.
+- [x] MOVED to `experimental/` `tools/vscode_extension/` (now `experimental/vscode_extension/`). The extension registers four commands (KeyForge.listCredentials, KeyForge.addCredential, KeyForge.testCredential, KeyForge.openDashboard) but ships no working implementation, no `.vscodeignore`, no `.vsixmanifest`, no tests, and no published marketplace listing. Promising shape, not shippable. Added `experimental/README.md` documenting the promotion criteria.
+- [x] MOVED to `experimental/` `integrations/kubernetes/` (now `experimental/kubernetes/`). Operator scaffolding (CRD, deployment, RBAC, requirements.txt, operator.py) exists but there is no test suite, no published OCI image, and no CI job that builds or pushes one. Stays out of the main tree until those land.
+- [x] MOVED to `experimental/` `integrations/terraform/` (now `experimental/terraform/`). Go source for a Terraform provider exists (`main.go`, `go.mod`, examples) but there is no compiled binary in `dist/`, no Terraform Registry publish job, and no acceptance test. Stays out of the main tree until those land.
 
 ### 4.2 CI hardening after Tier 1 is green
 - [ ] Add a `coverage` floor (start at the actual current % to avoid regression, raise over time).
@@ -158,10 +158,10 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 
 ### 4.3 Security follow-ups
 - [ ] Add CSRF protection (covered partially in 1.7; finish here if not done).
-- [ ] Make rate limiter per-user when authenticated, fall back to per-IP when not.
-- [ ] Fix `backend/security.py:40-42` to log a generic "decryption failed" without the exception text.
-- [ ] Add password complexity requirement on password-change endpoint (not just on signup).
-- [ ] Run `bandit` and `safety` and triage the findings (workflow already exists, results currently suppressed with `|| true`).
+- [x] Make rate limiter per-user when authenticated, fall back to per-IP when not. `backend/middleware/rate_limiter.py` now extracts identity via JWT (cookie or Authorization header) and falls back to `ip:<client_ip>` when the token is missing or invalid. Bucket key is `(identity, path)` so cross-path isolation is preserved. New tests in `tests/test_rate_limiter_per_user.py` (5 tests).
+- [x] Fix `backend/security.py:40-42` to log a generic "decryption failed" without the exception text. New log line: `Decryption failed (no further detail logged for security)`. Test `tests/test_security.py::TestEncryption::test_decrypt_failure_does_not_log_exception_text` asserts no exception details leak.
+- [x] Add password complexity requirement on password-change endpoint (not just on signup). New endpoint `POST /api/auth/change-password` (no prior endpoint existed) in `backend/routes/auth.py`; runs `validate_password` from `backend/utils/validators.py` (same helper signup uses). Tests in `tests/test_routes_auth.py::TestChangePassword` (4 tests).
+- [x] Run `bandit` and `safety` and triage the findings (workflow already exists, results currently suppressed with `|| true`). 30 bandit findings triaged: all false positives, annotated with precise `# nosec B###  # reason: ...` comments. 3 starlette CVEs documented in `SECURITY_FINDINGS.md` as blocked on a coordinated FastAPI upgrade. `python-multipart` pin tightened from `>=0.0.6` to `>=0.0.22` to clear unpinned multipart CVEs. Bandit `-l --skip B101` exits 0 with zero findings.
 
 ---
 
