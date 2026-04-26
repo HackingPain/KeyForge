@@ -2,8 +2,10 @@
 """KeyForge CLI - manage API keys and credentials from the command line."""
 
 import argparse
+import base64
 import json
 import os
+import secrets
 import sys
 from pathlib import Path
 
@@ -79,7 +81,107 @@ def _handle_response(resp: requests.Response) -> dict | str:
     return resp.text
 
 
+# ── backend/.env management (used by `init`) ──────────────────────────────────
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+BACKEND_ENV_PATH = REPO_ROOT / "backend" / ".env"
+MANAGED_ENV_KEYS = ("MONGO_URL", "DB_NAME", "ENCRYPTION_KEY", "JWT_SECRET")
+
+
+def _parse_env_file(env_path: Path) -> dict:
+    """Parse a simple KEY=VALUE .env file. Quotes around values are stripped."""
+    if not env_path.exists():
+        return {}
+    parsed = {}
+    for raw in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+            value = value[1:-1]
+        parsed[key] = value
+    return parsed
+
+
+def _generate_fernet_key() -> str:
+    """Return a 32-byte URL-safe base64 key suitable for cryptography.fernet.Fernet."""
+    return base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("ascii")
+
+
+def _generate_jwt_secret() -> str:
+    """Return a 64-byte URL-safe random secret for HS256 JWT signing."""
+    return secrets.token_urlsafe(64)
+
+
+def _write_env_file(env_path: Path, merged: dict) -> None:
+    """Write *merged* back to *env_path* with managed keys first, then the rest."""
+    lines = []
+    for key in MANAGED_ENV_KEYS:
+        if key in merged:
+            lines.append(f'{key}="{merged[key]}"')
+    for key in sorted(merged):
+        if key in MANAGED_ENV_KEYS:
+            continue
+        lines.append(f'{key}="{merged[key]}"')
+    env_path.parent.mkdir(parents=True, exist_ok=True)
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 # ── Commands ──────────────────────────────────────────────────────────────────
+
+def cmd_init(args):
+    """Generate ENCRYPTION_KEY + JWT_SECRET and write backend/.env."""
+    env_path = BACKEND_ENV_PATH
+    existing = _parse_env_file(env_path)
+
+    has_encryption_key = bool(existing.get("ENCRYPTION_KEY"))
+    has_jwt_secret = bool(existing.get("JWT_SECRET"))
+
+    if (has_encryption_key or has_jwt_secret) and not args.force:
+        print(f"{RED}Refusing to overwrite existing keys in {env_path}.{RESET}")
+        if has_encryption_key:
+            print(f"  {DIM}ENCRYPTION_KEY is already set.{RESET}")
+        if has_jwt_secret:
+            print(f"  {DIM}JWT_SECRET is already set.{RESET}")
+        print()
+        print(f"To regenerate, re-run with {BOLD}--force{RESET}.")
+        print(
+            f"{YELLOW}WARNING:{RESET} regenerating ENCRYPTION_KEY makes every credential "
+            f"already stored in KeyForge permanently unreadable. There is no recovery."
+        )
+        sys.exit(1)
+
+    if args.force and (has_encryption_key or has_jwt_secret):
+        banner = "=" * 64
+        print(f"{RED}{BOLD}{banner}{RESET}")
+        print(f"{RED}{BOLD}--force: replacing existing encryption keys.{RESET}")
+        print(f"{RED}{BOLD}All credentials encrypted under the old ENCRYPTION_KEY{RESET}")
+        print(f"{RED}{BOLD}will be permanently unreadable. There is no recovery.{RESET}")
+        print(f"{RED}{BOLD}{banner}{RESET}")
+        print()
+
+    merged = dict(existing)
+    merged.setdefault("MONGO_URL", "mongodb://localhost:27017")
+    if merged.get("DB_NAME", "") in ("", "test_database"):
+        merged["DB_NAME"] = "keyforge"
+    merged["ENCRYPTION_KEY"] = _generate_fernet_key()
+    merged["JWT_SECRET"] = _generate_jwt_secret()
+
+    _write_env_file(env_path, merged)
+
+    print(f"{GREEN}KeyForge initialised.{RESET}")
+    print(f"  {BOLD}Wrote:{RESET}        {DIM}{env_path}{RESET}")
+    print(f"  {BOLD}MONGO_URL:{RESET}    {merged['MONGO_URL']}")
+    print(f"  {BOLD}DB_NAME:{RESET}      {merged['DB_NAME']}")
+    print(f"  {BOLD}ENCRYPTION_KEY:{RESET} {DIM}<{len(merged['ENCRYPTION_KEY'])} chars, generated>{RESET}")
+    print(f"  {BOLD}JWT_SECRET:{RESET}     {DIM}<{len(merged['JWT_SECRET'])} chars, generated>{RESET}")
+    print()
+    print(f"Next: {BOLD}docker compose up --build{RESET}")
+    print(f"Then open {BLUE}http://localhost:3000{RESET} and register your first user.")
+
 
 def cmd_login(args):
     """Authenticate and store the JWT token."""
@@ -296,6 +398,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
+    # init
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Generate ENCRYPTION_KEY and JWT_SECRET, write backend/.env",
+    )
+    init_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing keys (DESTRUCTIVE: makes existing credentials unreadable)",
+    )
+
     # login
     login_parser = subparsers.add_parser("login", help="Login and store token")
     login_parser.add_argument("--username", required=True, help="Username")
@@ -332,6 +445,7 @@ def main():
         sys.exit(1)
 
     commands = {
+        "init": cmd_init,
         "login": cmd_login,
         "pull": cmd_pull,
         "push": cmd_push,
