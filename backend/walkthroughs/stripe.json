@@ -1,0 +1,42 @@
+{
+  "provider": "stripe",
+  "display_name": "Stripe",
+  "description": "Stripe is a payments platform. KeyForge needs a restricted key with read access so it can verify the credential and report usage without ever moving money on your behalf.",
+  "icon": "stripe",
+  "credential_label": "Restricted API key",
+  "validation": {
+    "regex": "^rk_(test|live)_[A-Za-z0-9]{24,}$",
+    "min_length": 32,
+    "max_length": 128
+  },
+  "suggested_scopes": [
+    {"value": "read_only", "label": "Read only (recommended)"},
+    {"value": "read_write", "label": "Read and write"}
+  ],
+  "steps": [
+    {
+      "title": "Open the Stripe API keys page",
+      "description": "Sign in to your Stripe account and go to Developers, API keys.",
+      "action": {
+        "type": "external_link",
+        "url": "https://dashboard.stripe.com/apikeys",
+        "label": "Open Stripe dashboard"
+      }
+    },
+    {
+      "title": "Click Create restricted key",
+      "description": "In the Restricted keys section, click Create restricted key. Pick a descriptive name like KeyForge so future-you knows what this key is for.",
+      "screenshot": null
+    },
+    {
+      "title": "Pick the permissions",
+      "description": "Read access is enough for KeyForge to verify the credential. Pick Read for everything; you can tighten this later if you want to scope it down to just the resources you use.",
+      "screenshot": null
+    },
+    {
+      "title": "Copy the key and paste it below",
+      "description": "Click Reveal token, copy the full key (it starts with rk_test_ or rk_live_), then paste it below. KeyForge encrypts it at rest the moment you click Save.",
+      "action": {"type": "paste_credential"}
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "provider": "openai",
+  "display_name": "OpenAI",
+  "description": "OpenAI is the company behind ChatGPT and the GPT-4 API. KeyForge needs an API key so it can verify the credential is live and track usage. The key never leaves your KeyForge instance in plaintext.",
+  "icon": "openai",
+  "credential_label": "API key",
+  "validation": {
+    "regex": "^sk-[A-Za-z0-9_-]{32,}$",
+    "min_length": 35,
+    "max_length": 256
+  },
+  "suggested_scopes": [
+    {"value": "all", "label": "All (default)"},
+    {"value": "restricted", "label": "Restricted (only the resources you pick in OpenAI)"}
+  ],
+  "steps": [
+    {
+      "title": "Open the OpenAI API keys page",
+      "description": "Sign in to your OpenAI account and go to the API keys page. If you have multiple projects, switch to the project you want this key to belong to first.",
+      "action": {
+        "type": "external_link",
+        "url": "https://platform.openai.com/api-keys",
+        "label": "Open OpenAI dashboard"
+      }
+    },
+    {
+      "title": "Click Create new secret key",
+      "description": "Pick a descriptive name like KeyForge so you can recognise the key later. Leaving Project set to your default is fine.",
+      "screenshot": null
+    },
+    {
+      "title": "Pick the permissions",
+      "description": "All is the default and works everywhere. If you only plan to use a subset of OpenAI features, choose Restricted and pick just those resources. You can change this later by creating a new key.",
+      "screenshot": null
+    },
+    {
+      "title": "Copy the key and paste it below",
+      "description": "OpenAI shows the full key only once. Copy it now (it starts with sk- or sk-proj-) and paste it below. KeyForge encrypts it at rest the moment you click Save.",
+      "action": {"type": "paste_credential"}
+    }
+  ]
+}
