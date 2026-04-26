@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const AuditIntegrity = ({ api }) => {
   const [stats, setStats] = useState(null);
@@ -111,7 +112,7 @@ const AuditIntegrity = ({ api }) => {
               <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
                 <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Total Entries</p>
                 <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-200">{stats.total_entries ?? 0}</p>
-                <p className="text-xs text-indigo-500 dark:text-indigo-400">in audit chain</p>
+                <p className="text-xs text-indigo-500 dark:text-indigo-400">in <JargonTerm term="audit chain">audit chain</JargonTerm></p>
               </div>
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                 <p className="text-sm text-green-600 dark:text-green-400 font-medium">Chain Status</p>

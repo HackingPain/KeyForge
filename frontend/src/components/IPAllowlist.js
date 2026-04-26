@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const IPAllowlist = ({ api }) => {
   const [entries, setEntries] = useState([]);
@@ -98,10 +99,10 @@ const IPAllowlist = ({ api }) => {
 
       {/* Add IP Form */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Add IP / CIDR</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Add IP / <JargonTerm term="CIDR">CIDR</JargonTerm></h3>
         <form onSubmit={handleAdd} className="flex flex-wrap gap-3 items-end">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">IP Address or CIDR</label>
+            <label className="block text-xs text-gray-500 mb-1">IP Address or <JargonTerm term="CIDR">CIDR</JargonTerm></label>
             <input
               type="text"
               value={newIp}
@@ -168,14 +169,14 @@ const IPAllowlist = ({ api }) => {
       ) : entries.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg mb-2">No IP allowlist entries</p>
-          <p className="text-sm">Add IPs or CIDR ranges above to restrict access.</p>
+          <p className="text-sm">Add IPs or <JargonTerm term="CIDR">CIDR</JargonTerm> ranges above to restrict access.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP / CIDR</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP / <JargonTerm term="CIDR">CIDR</JargonTerm></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Added</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>

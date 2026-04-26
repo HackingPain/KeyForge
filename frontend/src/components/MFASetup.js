@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const MFASetup = ({ api }) => {
   const [status, setStatus] = useState(null);
@@ -98,7 +99,7 @@ const MFASetup = ({ api }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">MFA Setup</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6"><JargonTerm term="MFA">MFA</JargonTerm> Setup</h2>
 
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
@@ -119,7 +120,7 @@ const MFASetup = ({ api }) => {
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Current Status</h3>
         <div className="flex items-center gap-3">
           <span className={`px-3 py-1 text-sm font-medium rounded-full ${status?.enabled ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-            {status?.enabled ? 'MFA Enabled' : 'MFA Disabled'}
+            {status?.enabled ? (<><JargonTerm term="MFA">MFA</JargonTerm> Enabled</>) : (<><JargonTerm term="MFA">MFA</JargonTerm> Disabled</>)}
           </span>
           {status?.enabled && status?.verified_at && (
             <span className="text-xs text-gray-500">Verified: {new Date(status.verified_at).toLocaleString()}</span>
@@ -135,9 +136,9 @@ const MFASetup = ({ api }) => {
             disabled={actionLoading}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
           >
-            {actionLoading ? 'Setting up...' : 'Enable MFA'}
+            {actionLoading ? 'Setting up...' : (<>Enable <JargonTerm term="MFA">MFA</JargonTerm></>)}
           </button>
-          <p className="text-xs text-gray-500 mt-2">Set up two-factor authentication using a TOTP authenticator app.</p>
+          <p className="text-xs text-gray-500 mt-2">Set up two-factor authentication using a <JargonTerm term="TOTP">TOTP</JargonTerm> authenticator app.</p>
         </div>
       )}
 
@@ -211,11 +212,11 @@ const MFASetup = ({ api }) => {
               onClick={() => setShowDisable(true)}
               className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-md hover:bg-red-100 text-sm font-medium"
             >
-              Disable MFA
+              Disable <JargonTerm term="MFA">MFA</JargonTerm>
             </button>
           ) : (
             <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-              <h3 className="text-sm font-semibold text-red-800 mb-2">Confirm MFA Disable</h3>
+              <h3 className="text-sm font-semibold text-red-800 mb-2">Confirm <JargonTerm term="MFA">MFA</JargonTerm> Disable</h3>
               <p className="text-xs text-red-600 mb-3">Enter your current 6-digit code to disable MFA.</p>
               <div className="flex gap-2">
                 <input

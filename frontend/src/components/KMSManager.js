@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const KMSManager = ({ api }) => {
   const [status, setStatus] = useState(null);
@@ -48,7 +49,7 @@ const KMSManager = ({ api }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">KMS Manager</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white"><JargonTerm term="KMS">KMS</JargonTerm> Manager</h2>
         <button
           onClick={handleTestConnectivity}
           disabled={testing}

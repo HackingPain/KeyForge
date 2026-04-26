@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const CredentialProxy = ({ api }) => {
   const [tokens, setTokens] = useState([]);
@@ -124,7 +125,7 @@ const CredentialProxy = ({ api }) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">TTL (seconds)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"><JargonTerm term="TTL">TTL</JargonTerm> (seconds)</label>
               <input
                 type="number"
                 value={newToken.ttl}
@@ -162,7 +163,7 @@ const CredentialProxy = ({ api }) => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Token</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Credential</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">TTL</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"><JargonTerm term="TTL">TTL</JargonTerm></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>

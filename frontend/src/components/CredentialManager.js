@@ -195,6 +195,10 @@ const CredentialManager = ({ api }) => {
               <form onSubmit={handleAddCredential} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    An API key (sometimes called a token or PAT) is a long string the provider issued you when you signed up.
+                    Paste it below; KeyForge stores it encrypted and never shows it in your browser again.
+                  </p>
                   <input
                     type="password"
                     value={newCredential.api_key}

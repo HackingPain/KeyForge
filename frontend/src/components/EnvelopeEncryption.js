@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import JargonTerm from "./JargonTerm";
 
 const EnvelopeEncryption = ({ api }) => {
   const [keyStatus, setKeyStatus] = useState(null);
@@ -41,13 +42,13 @@ const EnvelopeEncryption = ({ api }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Envelope Encryption</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white"><JargonTerm term="envelope encryption">Envelope Encryption</JargonTerm></h2>
         <button
           onClick={handleRotateKey}
           disabled={rotating}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
         >
-          {rotating ? 'Rotating...' : 'Rotate User Data Key'}
+          {rotating ? 'Rotating...' : (<>Rotate User Data Key (<JargonTerm term="DEK">DEK</JargonTerm>)</>)}
         </button>
       </div>
 
@@ -114,7 +115,7 @@ const EnvelopeEncryption = ({ api }) => {
       ) : (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <p className="text-lg mb-2">No key status available</p>
-          <p className="text-sm">Envelope encryption may not be configured yet.</p>
+          <p className="text-sm"><JargonTerm term="envelope encryption">Envelope encryption</JargonTerm> may not be configured yet.</p>
         </div>
       )}
     </div>
