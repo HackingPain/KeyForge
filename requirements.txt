@@ -30,6 +30,9 @@ python-dotenv>=1.0.0
 # YAML parsing
 pyyaml>=6.0.0
 
+# Optional KMS providers (lazy-imported in backend/encryption/kms.py)
+boto3>=1.34.129
+
 # Testing
 pytest>=7.4.0
 pytest-asyncio>=0.23.0
