@@ -1,9 +1,10 @@
 # Core web framework
-# fastapi 0.110.1 internally calls Router(... on_startup=...), which only works
-# against starlette < 0.40. Pin both exactly so CI and local match.
+# fastapi 0.110.1 hard-requires starlette>=0.37.2,<0.38.0. Newer starlette
+# (0.40+) drops the on_startup kwarg fastapi calls internally, so the upper
+# bound matters. Pin to the exact version fastapi ships with for CI/local parity.
 fastapi==0.110.1
 uvicorn>=0.24.0
-starlette==0.36.3
+starlette==0.37.2
 pydantic>=2.5.0
 python-multipart>=0.0.6
 
