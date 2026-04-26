@@ -7,7 +7,7 @@
 **Project:** KeyForge
 **Description:** Self-hosted, open-source API credential management platform. Vault for third-party API keys with heavy emphasis on rotation, breach detection, envelope/field encryption, audit-log integrity, and compliance reporting. Comparable space: HashiCorp Vault, Doppler, Infisical.
 **Stack:** FastAPI (Python 3.11) + MongoDB (Motor async driver) on the backend; React 19 + CRA/CRACO + Tailwind on the frontend; Docker Compose for local orchestration; Nginx serves the built frontend.
-**Owner:** Domenic Laurenzi (HackingPain on GitHub). Open source.
+**Owner:** DarkHorse Infosec (org). Repo: `DarkHorse-InfoSec/KeyForge`. Original author and maintainer: Domenic Laurenzi. Open source under Apache 2.0.
 **Backend version:** v5.0 (see `backend/server.py` docstring).
 
 ## Directory Structure

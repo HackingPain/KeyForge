@@ -31,7 +31,7 @@ Backend version is v5.0. Expect breaking changes between minor versions until a 
 ## 5-minute quickstart
 
 ```
-git clone https://github.com/HackingPain/KeyForge.git
+git clone https://github.com/DarkHorse-InfoSec/KeyForge.git
 cd KeyForge
 python tools/cli.py init
 docker compose up --build
@@ -90,4 +90,4 @@ KeyForge handles credentials at rest, so security reports are treated as high pr
 
 ## License
 
-KeyForge is released under the MIT License. See [LICENSE](LICENSE) for the full text.
+KeyForge is released under the Apache License 2.0. See [LICENSE](LICENSE) for the full text. The Apache 2.0 license carries an explicit patent grant and trademark protection clause that the MIT License lacks.

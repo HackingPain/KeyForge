@@ -60,7 +60,7 @@ KeyForge today is a credential vault (stores keys you already have). The goal is
 
 ### 1.6 Fix the deploy workflow
 - [x] `.github/workflows/deploy.yml` rewritten: real `docker/login-action@v3` to GHCR, `docker/build-push-action@v6` for both backend and frontend images (tagged `:${ref_name}` and `:latest`), `permissions: contents: write, packages: write`, then `softprops/action-gh-release@v2`. No commented-out placeholder lines.
-- [ ] Acceptance: tagging `v0.x.y` actually publishes images to `ghcr.io/HackingPain/KeyForge/{backend,frontend}`. (Verified by YAML-parsing only; first real tag will exercise the workflow.)
+- [ ] Acceptance: tagging `v0.x.y` actually publishes images to `ghcr.io/darkhorse-infosec/keyforge/{backend,frontend}`. (Verified by YAML-parsing only; first real tag will exercise the workflow. The deploy workflow uses `${{ github.repository }}` so the path auto-derives from the repo, no edit was needed when KeyForge transferred from `HackingPain/KeyForge` to `DarkHorse-InfoSec/KeyForge`.)
 
 ### 1.7 Move JWT to httpOnly cookie (security + Tier 1 because it's small)
 - [x] Backend `routes/auth.py`: login now sets `Set-Cookie: keyforge_token=...; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`. `Secure` flag gated on `KEYFORGE_COOKIE_SECURE` env var (default true; set false for HTTP dev). Body still returns `{access_token, token_type}` for CLI/SDK. Added `POST /api/auth/logout` that clears the cookie.
