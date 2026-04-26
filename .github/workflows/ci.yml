@@ -42,7 +42,7 @@ jobs:
         env:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: keyforge_test
-          ENCRYPTION_KEY: dGVzdGtleWZvcmtleWZvcmdlMTIzNDU2Nzg5MDEyMzQ1Ng==
+          ENCRYPTION_KEY: llxRol8zU9jV0xOwHSMd_8kGTlG5FXWRc_45SLN60Ag=
           JWT_SECRET: test-jwt-secret
         run: pytest tests/ -v --cov=backend --cov-report=term-missing --cov-report=xml
       # Coverage floor. The current line coverage as measured locally with the
@@ -145,7 +145,7 @@ jobs:
         env:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: keyforge_test
-          ENCRYPTION_KEY: dGVzdGtleWZvcmtleWZvcmdlMTIzNDU2Nzg5MDEyMzQ1Ng==
+          ENCRYPTION_KEY: llxRol8zU9jV0xOwHSMd_8kGTlG5FXWRc_45SLN60Ag=
           JWT_SECRET: test-jwt-secret
           KEYFORGE_COOKIE_SECURE: 'false'
         run: |
@@ -198,7 +198,7 @@ jobs:
     name: Docker Compose Smoke
     runs-on: ubuntu-latest
     env:
-      ENCRYPTION_KEY: dGVzdGtleWZvcmtleWZvcmdlMTIzNDU2Nzg5MDEyMzQ1Ng==
+      ENCRYPTION_KEY: llxRol8zU9jV0xOwHSMd_8kGTlG5FXWRc_45SLN60Ag=
       JWT_SECRET: test-jwt-secret
     steps:
       - uses: actions/checkout@v4
