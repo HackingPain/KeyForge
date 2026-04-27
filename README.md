@@ -42,7 +42,7 @@ open http://localhost:3000
 
 After `docker compose up`, the backend is on port 8001, the frontend is on port 3000, and MongoDB runs internally to the compose network. Register a user from the dashboard to get started.
 
-For the credential-issuer features (Connect GitHub, mint AWS STS) to work end to end against real providers, an operator must register a GitHub App on the org and wire AWS credentials into the deployment env. The step-by-step runbook for both is in [docs/operator-setup.md](docs/operator-setup.md).
+For the credential-issuer features (Connect GitHub, mint AWS STS) to work end to end against real providers, an operator must register a GitHub App on the org and wire AWS credentials into the deployment env. The combined runbook is in [docs/operator-setup.md](docs/operator-setup.md). A standalone, self-contained AWS-only walkthrough lives at [docs/aws-setup.md](docs/aws-setup.md).
 
 ## Local development without Docker
 
