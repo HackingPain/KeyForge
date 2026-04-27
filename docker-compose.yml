@@ -19,19 +19,22 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8001:8001"
-    # backend/.env is the source of truth for local dev (ENCRYPTION_KEY,
-    # JWT_SECRET, GITHUB_APP_*, KEYFORGE_*, and any future credential-issuer
-    # vars). It is gitignored, so mark it required:false so CI (which gets
-    # ENCRYPTION_KEY + JWT_SECRET from job-level env via the ${VAR}
-    # interpolations below) can still bring up the stack without it.
+    # backend/.env is the single source of truth for ENCRYPTION_KEY,
+    # JWT_SECRET, GITHUB_APP_*, KEYFORGE_*, and every other backend env var.
+    # It is gitignored; CI's docker-smoke job writes a stub before bringing
+    # the stack up. The explicit `environment:` block below carries only the
+    # values that must differ between bare-metal and the compose network
+    # (Mongo URL points at the mongodb service).
+    #
+    # Important: `environment:` in compose overrides `env_file`. We
+    # deliberately do NOT list ENCRYPTION_KEY / JWT_SECRET here, so the
+    # values from env_file flow through to the container intact.
     env_file:
       - path: backend/.env
         required: false
     environment:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=keyforge
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
