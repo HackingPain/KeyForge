@@ -133,8 +133,15 @@ test.describe('Dashboard', () => {
     await expect(page.getByRole('button', { name: /KMS Manager/ })).toHaveCount(0);
 
     // Flip the Show advanced switch. App.js renders it as
-    // <input type="checkbox" role="switch" aria-label="Show advanced features">.
-    await page.getByRole('switch', { name: 'Show advanced features' }).check();
+    // <input type="checkbox" role="switch" aria-label="Show advanced features"
+    //   class="sr-only peer">
+    // The visible track is a sibling <span> rendered by Tailwind's peer
+    // utility. Playwright's default click hit-tests intercept the span as
+    // covering the input, so use force:true to dispatch the click directly
+    // to the (visually hidden but accessibility-correct) input.
+    await page
+      .getByRole('switch', { name: 'Show advanced features' })
+      .check({ force: true });
 
     // After the toggle, advanced items appear in the sidebar.
     await expect(

@@ -11,11 +11,22 @@ const ASSERTION_TIMEOUT = 15000;
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ context, page }) => {
+    // Defensive: clear cookies AND localStorage, then navigate. If the page
+    // somehow lands in a logged-in state anyway (observed empirically when a
+    // sibling suite leaves session state in the same Playwright worker),
+    // click Logout and wait for AuthScreen to re-mount.
     await context.clearCookies();
     await page.goto('/');
-    // Wait for the initial fetch storm to settle so the AuthScreen has had
-    // a chance to mount.
+    await page.evaluate(() => window.localStorage.clear()).catch(() => {});
     await page.waitForLoadState('networkidle');
+
+    const logoutButton = page.getByRole('button', { name: 'Logout' });
+    if (await logoutButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await logoutButton.click();
+      await context.clearCookies();
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+    }
   });
 
   test('shows AuthScreen on first visit', async ({ page }) => {
