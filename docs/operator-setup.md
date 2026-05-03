@@ -119,6 +119,8 @@ GITHUB_APP_INSTALL_REDIRECT_URL=http://localhost:8001/api/issuers/github/callbac
 KEYFORGE_FRONTEND_URL=http://localhost:3000
 ```
 
+If you have set `KEYFORGE_FRONTEND_PORT` (e.g. because port 3000 is taken locally), `KEYFORGE_FRONTEND_URL` and the GitHub App's Homepage URL must match the new port — the install-redirect handshake compares the two literally.
+
 `GITHUB_APP_PRIVATE_KEY` accepts either a filesystem path (the safer form;
 the file stays out of `.env`) **or** the PEM contents directly (paste the
 whole `-----BEGIN ... -----END` block). The KeyForge backend detects which

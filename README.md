@@ -42,6 +42,8 @@ open http://localhost:3000
 
 After `docker compose up`, the backend is on port 8001, the frontend is on port 3000, and MongoDB runs internally to the compose network. Register a user from the dashboard to get started.
 
+If host port 3000 is already taken on your machine (Grafana, another React app, etc.), set `KEYFORGE_FRONTEND_PORT=3001` (or any free port) in a project-root `.env` before `docker compose up`. The same file is read by `e2e/playwright.config.js`, so the e2e suite stays in sync. The backend port (8001) is not parameterized: `REACT_APP_BACKEND_URL` is baked into the frontend image at build time, so changing the backend port requires rebuilding the frontend.
+
 For the credential-issuer features (Connect GitHub, mint AWS STS) to work end to end against real providers, an operator must register a GitHub App on the org and wire AWS credentials into the deployment env. The combined runbook is in [docs/operator-setup.md](docs/operator-setup.md). A standalone, self-contained AWS-only walkthrough lives at [docs/aws-setup.md](docs/aws-setup.md).
 
 ## Local development without Docker
